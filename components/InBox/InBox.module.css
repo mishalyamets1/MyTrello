@@ -1,0 +1,38 @@
+.inBox_header{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    padding-top: 0;
+    border-bottom: 1px solid #ccc;
+}
+.inBox {
+    width: 100%;
+    min-width: 0;
+    height: 100%;
+    box-sizing: border-box;
+    border-radius: var(--radius);
+    display: flex;
+    flex-direction: column;
+    padding: 0 12px;
+}
+.card {
+    background: lab(80.3307 -20.2945 -31.385);
+}
+.inBox_headerBtn {
+    display: flex;
+    gap: 8px;
+}
+.inBox_headerLogo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.inBox_content {
+    padding: 0 8px;
+}
+.InBox_addItemBtns {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}

@@ -1,0 +1,33 @@
+.header_wrapper {
+    display: flex;
+    min-height: 56px;   
+    background-color: #ffffff;
+    border-bottom: 1px solid #e5e5e5;
+    justify-content: space-between;
+    padding: 0 16px;
+}
+.header_logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 16px;
+}
+.header_board {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 16px;
+}
+.header_search {
+    display: flex;
+    align-items: center;
+    gap: 48px;
+    padding: 0 16px;
+    white-space: nowrap;
+    width: auto;
+}
+.header_user {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
