@@ -5,6 +5,8 @@
     padding: 10px;
     padding-top: 0;
     border-bottom: 1px solid #ccc;
+    font-size: larger;
+    font-weight: bold;
 }
 .inBox {
     width: 100%;

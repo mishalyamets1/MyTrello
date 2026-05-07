@@ -1,0 +1,11 @@
+.mainCard {
+    padding: 0 8px;
+    height: 100%;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.mainCard > * {
+    height: 100%;
+}
