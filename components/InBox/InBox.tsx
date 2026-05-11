@@ -8,13 +8,18 @@ import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 import Task from '../Task'
 import { useBoardStore } from '@/stores/boardStore'
+import { useDroppable } from '@dnd-kit/core'
 
 
 const InBox = () => {
 
     const [isOpen, setIsOpen] = useState(false)
     const [inputValue, setInputValue] = useState('')
-    const {} = useBoardStore()
+    const { addTaskToInbox, inbox } = useBoardStore()
+    const { setNodeRef } = useDroppable({
+        id: 'inbox',
+        data: { columnId: 'inbox' }
+    })
     
 
   return (
@@ -45,15 +50,19 @@ const InBox = () => {
                       />
                       {isOpen && (
                         <div className={styles.InBox_addItemBtns}>
-                            <Button variant="default" >Добавить</Button>
+                            <Button variant="default" onMouseDown={() => {
+                                addTaskToInbox(inputValue);
+                                setIsOpen(false);
+                                setInputValue('');
+                            }}>Добавить</Button>
                             <Button variant="outline" onClick={() => setIsOpen(false)}>Отмена</Button>
                         </div>
                       )}
                 </div>
-                <div className={styles.InBox_tasks}>
-                    <Task task={{ id: '1', title: 'Task 1', description: 'Description 1', tags: [], done: false, createdAt: new Date() }} />
-                    <Task task={{ id: '2', title: 'Task 2', description: 'Description 2', tags: [], done: false, createdAt: new Date() }} />
-                    <Task task={{ id: '3', title: 'Task 3', description: 'Description 3', tags: [], done: false, createdAt: new Date() }} />
+                <div className={styles.InBox_tasks} ref={setNodeRef}>
+                    {inbox.map((task) => (
+                        <Task key={task.id} task={task} columnId="inbox"></Task>
+                    ))}
                 </div>
             </div>
         </Card>

@@ -15,6 +15,20 @@
     display: flex;
     gap: 8px;
 }
+.task_dragHandle {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--card);
+    color: var(--muted-foreground);
+    cursor: grab;
+    font-weight: 700;
+    line-height: 1;
+    padding: 2px 6px;
+    user-select: none;
+}
+.task_dragHandle:active {
+    cursor: grabbing;
+}
 .task_content {
     display: flex;
     align-items: center;
@@ -78,4 +92,10 @@
     margin-left: 8px;
     transform: translateX(12px);
 
+}
+
+.task_dialogActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
 }

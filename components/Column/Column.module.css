@@ -1,0 +1,31 @@
+.column {
+    min-width: 300px;
+    width: 300px;
+    display: flex;
+    padding: 0 12px;
+    align-self: flex-start;
+    
+    
+}
+.column_card {
+    display: flex;
+    padding: 0;
+    width: 100%;
+    padding-bottom: 12px;
+}
+
+.column_header {
+    border-bottom: 1px solid #ccc;
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    gap: 8px;
+    width: 100%;
+}
+.column_tasks {
+    display: flex;
+    flex-direction: column;
+    padding: 0px 8px;
+    width: 100%;    
+}

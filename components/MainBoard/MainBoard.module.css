@@ -5,7 +5,12 @@
     display: flex;
     flex-direction: column;
 }
-
+.mainCard_inner {
+    padding: 12px 0;
+    display: flex;
+    flex-direction: row;
+}
 .mainCard > * {
     height: 100%;
+    flex-shrink: 0;
 }
