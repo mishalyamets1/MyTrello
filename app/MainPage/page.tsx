@@ -60,13 +60,10 @@ const MainPage = () => {
           </ResizablePanel>
           <ResizableHandle withHandle />
           <ResizablePanel>
-            <ScrollArea >
               <MainBoard />
-              <ScrollBar orientation='horizontal' />
-            </ScrollArea>
           </ResizablePanel>
         </ResizablePanelGroup>
-        <DragOverlay>
+        <DragOverlay dropAnimation={null}>
           {activeTask ? <Task task={activeTask} columnId="overlay" draggable={false} /> : null}
         </DragOverlay>
       </DndContext>

@@ -19,63 +19,91 @@ export interface BoardStore {
     inbox: Task[];
 
     addTaskToInbox: (title: string) => void;
-    deleteCardFromInbox?: (cardId: string) => void;
-    updateInboxCard: (cardId: string, updates: Partial<Task>) => void;
+    deleteTask: (taskId: string) => void;
+    updateTask: (taskId: string, updates: Partial<Task>) => void;
     moveTask?: (taskId: string, fromColumnId: string, toColumnId: string, toIndex: number) => void;
+    addColumn: (title: string) => void;
+    deleteColumn: (columnId: string) => void;
+    loadData: () => void;
 }
 
 export const useBoardStore = create<BoardStore>((set, get) => ({
+    columns: [],
     inbox: [],
 
-    columns: [
-        {
-            id: '1',
-            title: 'To Do',
-            tasks: []
-        },
+    async loadData() {
+        const [colRes, tasksRes] = await Promise.all([
+            fetch('http://localhost:3001/api/columns'),
+            fetch('http://localhost:3001/api/tasks/inbox')
+        ]);
+        const columns = await colRes.json();
+        const tasks = await tasksRes.json()
 
-        {
-            id: '2',
-            title: 'In Progress',
-            tasks: []
-        },
+        set({
+            columns: columns.data,
+            inbox: tasks.data
+        });
+    },
+   
+    addTaskToInbox: async (title) => {
+        const res = await fetch('http://localhost:3001/api/tasks/inbox', {
+            method: 'POST', 
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({title})
+        })
+        const data = await res.json()
 
-        {
-            id: '3',
-            title: 'Done',
-            tasks: []
-        }
-    ],
-    addTaskToInbox: (title) => {
-        console.log('Adding task:', title);
         set((state) => ({
-            inbox: [
-                ...state.inbox,
-                {
-                    id: Date.now().toString(),
-                    title,
-                    description: '',
-                    tags: [],
-                    done: false,
-                    createdAt: new Date()
-                }
-            ]
+            inbox: [...state.inbox, data.data]
         }))
     },
-    updateInboxCard: (cardId, updates) => {
+    updateTask: async (taskId, updates) => {
+        const res = await fetch(`http://localhost:3001/api/tasks/${taskId}`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(updates)
+        })
+        const data = await res.json()
+
         set((state) => ({
             inbox: state.inbox.map((task) =>
-                task.id === cardId ? { ...task, ...updates } : task
-            )
+                task.id === taskId ? { ...task, ...updates } : task
+            ),
+            columns: state.columns.map((column) => ({
+                ...column,
+                tasks: column.tasks.map((task) =>
+                    task.id === taskId ? { ...task, ...updates } : task
+                )
+            }))
         }))
     },
-    deleteCardFromInbox: (cardId) => {
-        set((state) => ({
-            inbox: state.inbox.filter((task) => task.id !== cardId)
-        }))
+    deleteTask: async (taskId) => {
+        const res = await fetch(`http://localhost:3001/api/tasks/${taskId}`, {
+            method: 'DELETE',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({taskId})
+        })
+        const data = await res.json()
+        if (data.success) {
+            set((state) => ({
+                inbox: state.inbox.filter((task) => task.id !== taskId),
+                columns: state.columns.map((column) => ({
+                    ...column,
+                    tasks: column.tasks.filter((task) => task.id !== taskId)
+                }))
+            }))
+        }
+        
     },
-    moveTask: (taskId, fromColumnId, toColumnId, toIndex) => {
-        set((state) => {
+    moveTask: async (taskId, fromColumnId, toColumnId, toIndex) => {
+        const res = await fetch(`http://localhost:3001/api/tasks/${taskId}/move`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({fromColumnId, toColumnId, toIndex})
+        })
+        const data = await res.json()
+        if (data.success){
+set((state) => {
             const nextColumns = state.columns.map((column) => ({
                 ...column,
                 tasks: [...column.tasks]
@@ -139,7 +167,34 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
                 inbox: nextInbox,
                 columns: nextColumns
             }
+        }
+    )}
+    },
+    addColumn: async (title) => {
+        const res = await fetch('http://localhost:3001/api/columns', {
+            method: 'POST', 
+            headers: {'Content-Type' : 'application/json'},
+            body: JSON.stringify({title})
         })
+        const data = await res.json()
+
+        set((state) => ({
+            columns: [ ...state.columns, data.data]
+        }))
+    }, 
+    deleteColumn: async (columnId) => {
+        const res = await fetch(`http://localhost:3001/api/columns/${columnId}`, {
+            method: 'DELETE',
+            headers: {'Content-Type' : 'application/json'},
+            body: JSON.stringify({columnId})
+        })
+        const data = await res.json()
+        if (data.success) {
+            set((state) => ({
+                columns: state.columns.filter((col) => col.id !== columnId)
+            }))
+        }
+        
     }
 }))
     

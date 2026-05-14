@@ -25,7 +25,7 @@ export type TaskProps = {
 }
 
 const Task = ({ task, columnId, draggable = true }: TaskProps) => {
-  const { updateInboxCard, deleteCardFromInbox } = useBoardStore()
+  const { updateTask, deleteTask } = useBoardStore()
   const [isOpen, setIsOpen] = useState(false)
   const [title, setTitle] = useState(task.title)
   const [description, setDescription] = useState(task.description || '')
@@ -60,7 +60,7 @@ const Task = ({ task, columnId, draggable = true }: TaskProps) => {
 
   const handleSave = () => {
     const trimmedTitle = title.trim()
-    updateInboxCard(task.id, {
+    updateTask(task.id, {
       title: trimmedTitle.length > 0 ? trimmedTitle : task.title,
       description: description.trim(),
       tags: parsedTags
@@ -140,7 +140,7 @@ const Task = ({ task, columnId, draggable = true }: TaskProps) => {
           )}
         </div>
         <div className={styles.task_dialogActions}>
-          <Button variant="destructive" onClick={() => deleteCardFromInbox!(task.id)}>
+          <Button variant="destructive" onClick={() => deleteTask(task.id)}>
             Delete
           </Button>
           <Button variant="default" onClick={handleSave}>

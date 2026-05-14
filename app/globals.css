@@ -121,11 +121,13 @@
   * {
     @apply border-border outline-ring/50;
   }
-  html,
-  body {
+  html {
     height: 100%;
+    overflow: hidden;
   }
   body {
+    height: 100%;
+    overflow: hidden;
     @apply bg-background text-foreground;
   }
   button:not(:disabled), [role="button"]:not(:disabled) {

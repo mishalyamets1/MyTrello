@@ -24,7 +24,7 @@ const InBox = () => {
 
   return (
     <div className={styles.inBox}>
-        <Card className="border border-border ring-0" id='card'>
+        <Card className={`${styles.card} border border-border ring-0`} id='card'>
             <div className={styles.inBox_header}>
                 <div className={styles.inBox_headerLogo}>
                     <Image src="/inbox.svg" alt="inbox logo" width={16} height={16}></Image>
@@ -60,9 +60,13 @@ const InBox = () => {
                       )}
                 </div>
                 <div className={styles.InBox_tasks} ref={setNodeRef}>
-                    {inbox.map((task) => (
-                        <Task key={task.id} task={task} columnId="inbox"></Task>
-                    ))}
+                    {inbox.length === 0 ? (
+                        <div className={styles.InBox_empty}>Drop task here</div>
+                    ) : (
+                        inbox.map((task) => (
+                            <Task key={task.id} task={task} columnId="inbox"></Task>
+                        ))
+                    )}
                 </div>
             </div>
         </Card>

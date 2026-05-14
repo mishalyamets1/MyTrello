@@ -14,7 +14,7 @@ export type ColumnProps = {
 
 const Column = ({column}: ColumnProps) => {
 
-    const {} = useBoardStore()
+    const {deleteColumn} = useBoardStore()
     const {setNodeRef} = useDroppable({
         id: column.id,
         data: {columnId: column.id}
@@ -25,7 +25,7 @@ const Column = ({column}: ColumnProps) => {
       <Card className={`${styles.column_card} border border-border ring-0 items-start`}>
             <div className={styles.column_header}>
                 <div>{column.title}</div>
-                <Button variant="destructive" size="sm">Delete</Button>
+                <Button variant="destructive" size="sm" onClick={() => deleteColumn(column.id)}>Delete</Button>
                 
             </div>
             <div className={styles.column_tasks}>
@@ -33,7 +33,6 @@ const Column = ({column}: ColumnProps) => {
                     <Task key={task.id} task={task} columnId={column.id}></Task>
                 ))}
             </div>
-
         </Card>
     </div>
   )
