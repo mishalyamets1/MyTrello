@@ -103,10 +103,10 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
         })
         const data = await res.json()
         if (data.success){
-set((state) => {
-            const nextColumns = state.columns.map((column) => ({
-                ...column,
-                tasks: [...column.tasks]
+            set((state) => {
+                const nextColumns = state.columns.map((column) => ({
+                    ...column,
+                    tasks: [...column.tasks]
             }))
 
             const getColumnTasks = (columnId: string) => {

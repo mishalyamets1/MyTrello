@@ -59,7 +59,7 @@ const MainPage = () => {
             <InBox />
           </ResizablePanel>
           <ResizableHandle withHandle />
-          <ResizablePanel>
+          <ResizablePanel minSize={400}>
               <MainBoard />
           </ResizablePanel>
         </ResizablePanelGroup>
