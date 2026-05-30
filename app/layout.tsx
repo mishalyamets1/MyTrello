@@ -7,6 +7,8 @@ import { cn } from "@/lib/utils";
 import Header from "@/components/header";
 import { useBoardStore } from "@/stores/boardStore";
 import { useEffect } from "react";
+import { useAuthStore } from "@/stores/authStore";
+import { Toaster } from "sonner";
 const montserrat = Montserrat({subsets:['latin'],variable:'--font-sans'});
 
 const geistSans = Geist({
@@ -29,20 +31,17 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-    const {loadData} = useBoardStore()
+    
 
-    useEffect(() => {
-      loadData()
-    }, [loadData])
   return (
     <html
       lang="en"
       className={cn("h-full", "antialiased", geistSans.variable, geistMono.variable, "font-sans", montserrat.variable)}
     >
       <body className="min-h-full flex flex-col">
-        <Header />
         <main>{children}</main>
-        </body>
+        <Toaster />
+      </body>
     </html>
   );
 }

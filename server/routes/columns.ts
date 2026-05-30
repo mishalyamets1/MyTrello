@@ -4,6 +4,7 @@ const router = express.Router();
 
 router.get('/', columnController.getAllColumns )
 router.post('/', columnController.createColumn)
+router.post('/:id/move', columnController.moveColumns)
 router.delete('/:id', columnController.deleteColumn)
 
 

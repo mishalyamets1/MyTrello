@@ -1,4 +1,6 @@
 import { create } from "zustand";
+import { arrayMove } from "@dnd-kit/sortable";
+import { useAuthStore } from "./authStore";
 
 export interface Task {
     id: string;
@@ -22,6 +24,7 @@ export interface BoardStore {
     deleteTask: (taskId: string) => void;
     updateTask: (taskId: string, updates: Partial<Task>) => void;
     moveTask?: (taskId: string, fromColumnId: string, toColumnId: string, toIndex: number) => void;
+    moveColumn: (fromColumnId: string, toColumnId: string, toIndex: number) => void;
     addColumn: (title: string) => void;
     deleteColumn: (columnId: string) => void;
     loadData: () => void;
@@ -32,35 +35,48 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
     inbox: [],
 
     async loadData() {
+        const token = useAuthStore.getState().token
         const [colRes, tasksRes] = await Promise.all([
-            fetch('http://localhost:3001/api/columns'),
-            fetch('http://localhost:3001/api/tasks/inbox')
+            fetch('http://localhost:3001/api/columns', {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            }),
+            fetch('http://localhost:3001/api/tasks/inbox', {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            })
         ]);
         const columns = await colRes.json();
         const tasks = await tasksRes.json()
 
         set({
-            columns: columns.data,
-            inbox: tasks.data
+            columns: columns.data ?? [],
+            inbox: tasks.data ?? []
         });
     },
    
     addTaskToInbox: async (title) => {
+        const token = useAuthStore.getState().token
         const res = await fetch('http://localhost:3001/api/tasks/inbox', {
             method: 'POST', 
-            headers: {'Content-Type': 'application/json'},
+            headers: {'Content-Type': 'application/json', Authorization: `Bearer ${token}`},
             body: JSON.stringify({title})
         })
         const data = await res.json()
 
-        set((state) => ({
-            inbox: [...state.inbox, data.data]
-        }))
+        if (data?.data) {
+            set((state) => ({
+                inbox: [...state.inbox, data.data]
+            }))
+        }
     },
     updateTask: async (taskId, updates) => {
+        const token = useAuthStore.getState().token
         const res = await fetch(`http://localhost:3001/api/tasks/${taskId}`, {
             method: 'PUT',
-            headers: {'Content-Type': 'application/json'},
+            headers: {'Content-Type': 'application/json', Authorization: `Bearer ${token}`},
             body: JSON.stringify(updates)
         })
         const data = await res.json()
@@ -78,9 +94,10 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
         }))
     },
     deleteTask: async (taskId) => {
+        const token = useAuthStore.getState().token
         const res = await fetch(`http://localhost:3001/api/tasks/${taskId}`, {
             method: 'DELETE',
-            headers: {'Content-Type': 'application/json'},
+            headers: {'Content-Type': 'application/json', Authorization: `Bearer ${token}`},
             body: JSON.stringify({taskId})
         })
         const data = await res.json()
@@ -96,17 +113,10 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
         
     },
     moveTask: async (taskId, fromColumnId, toColumnId, toIndex) => {
-        const res = await fetch(`http://localhost:3001/api/tasks/${taskId}/move`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({fromColumnId, toColumnId, toIndex})
-        })
-        const data = await res.json()
-        if (data.success){
-            set((state) => {
-                const nextColumns = state.columns.map((column) => ({
-                    ...column,
-                    tasks: [...column.tasks]
+        const applyMove = (state: BoardStore) => {
+            const nextColumns = state.columns.map((column) => ({
+                ...column,
+                tasks: [...column.tasks]
             }))
 
             const getColumnTasks = (columnId: string) => {
@@ -168,12 +178,60 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
                 columns: nextColumns
             }
         }
-    )}
+
+        set((state) => applyMove(state))
+
+        const token = useAuthStore.getState().token
+        try {
+            const res = await fetch(`http://localhost:3001/api/tasks/${taskId}/move`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json', Authorization: `Bearer ${token}`},
+                body: JSON.stringify({fromColumnId, toColumnId, toIndex})
+            })
+            const data = await res.json()
+            if (!data.success) {
+                await get().loadData()
+            }
+        } catch (error) {
+            await get().loadData()
+        }
+    },
+    moveColumn: async (fromColumnId, toColumnId, toIndex) => {
+        if (fromColumnId === toColumnId || toIndex < 0) return
+
+        set((state) => {
+            const fromIndex = state.columns.findIndex((column) => column.id === fromColumnId)
+
+            if (fromIndex === -1 || toIndex === -1) {
+                return state
+            }
+
+            return {
+                ...state,
+                columns: arrayMove(state.columns, fromIndex, toIndex)
+            }
+        })
+        const token = useAuthStore.getState().token
+        try {
+            const res = await fetch(`http://localhost:3001/api/columns/${fromColumnId}/move`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json', Authorization: `Bearer ${token}`},
+                body: JSON.stringify({toIndex})
+            })
+            const data = await res.json()
+
+            if (!data.success) {
+                await get().loadData()
+            }
+        } catch (e) {
+            get().loadData()
+        }
     },
     addColumn: async (title) => {
+        const token = useAuthStore.getState().token
         const res = await fetch('http://localhost:3001/api/columns', {
             method: 'POST', 
-            headers: {'Content-Type' : 'application/json'},
+            headers: {'Content-Type' : 'application/json', Authorization: `Bearer ${token}`},
             body: JSON.stringify({title})
         })
         const data = await res.json()
@@ -183,9 +241,10 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
         }))
     }, 
     deleteColumn: async (columnId) => {
+        const token = useAuthStore.getState().token
         const res = await fetch(`http://localhost:3001/api/columns/${columnId}`, {
             method: 'DELETE',
-            headers: {'Content-Type' : 'application/json'},
+            headers: {'Content-Type' : 'application/json', Authorization: `Bearer ${token}`},
             body: JSON.stringify({columnId})
         })
         const data = await res.json()

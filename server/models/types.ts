@@ -6,6 +6,7 @@ export interface Task {
   done: boolean;
   tags: string[];
   createdAt: Date;
+  position: number;
 }
 
 export interface Column {

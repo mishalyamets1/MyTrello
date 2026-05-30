@@ -4,8 +4,10 @@ import Image from 'next/image'
 import { Input } from '../ui/input'
 import { Avatar } from '../ui/avatar'
 import { Button } from '../ui/button'
+import { useAuthStore } from '@/stores/authStore'
 
 const Header = () => {
+    const {logout} = useAuthStore()
   return (
     <div className={styles.header_wrapper}>
         <div className={styles.header_logo}>
@@ -20,7 +22,7 @@ const Header = () => {
         </div>
         <div className={styles.header_user}>
             <Avatar></Avatar>
-            <Button variant="default">Sign in</Button>
+            <Button onClick={() => logout()} variant="default">Logout</Button>
         </div>
     </div>
   )

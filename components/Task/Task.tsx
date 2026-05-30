@@ -17,7 +17,8 @@ import { Textarea } from '../ui/textarea'
 import { Button } from '../ui/button'
 import styles from './Task.module.css'
 import type { Task } from '@/stores/boardStore'
-import { useDraggable } from '@dnd-kit/core'
+import { useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 export type TaskProps = {
   task: Task;
   columnId: string;
@@ -31,14 +32,15 @@ const Task = ({ task, columnId, draggable = true }: TaskProps) => {
   const [description, setDescription] = useState(task.description || '')
   const [tagsInput, setTagsInput] = useState(task.tags.join(', '))
 
-  const {attributes, listeners, setNodeRef, transform, isDragging} = useDraggable({
+  const {attributes, listeners, setNodeRef, transform, transition, isDragging} = useSortable({
     id: task.id,
-    data: { columnId },
+    data: { columnId, type: 'task' },
     disabled: !draggable
   })
 
   const style = {
-    transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
+    transform: CSS.Transform.toString(transform),
+    transition,
     opacity: isDragging ? 0.3 : undefined
   }
 

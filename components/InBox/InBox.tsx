@@ -9,6 +9,7 @@ import { Input } from '../ui/input'
 import Task from '../Task'
 import { useBoardStore } from '@/stores/boardStore'
 import { useDroppable } from '@dnd-kit/core'
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 
 
 const InBox = () => {
@@ -59,15 +60,17 @@ const InBox = () => {
                         </div>
                       )}
                 </div>
-                <div className={styles.InBox_tasks} ref={setNodeRef}>
-                    {inbox.length === 0 ? (
-                        <div className={styles.InBox_empty}>Drop task here</div>
-                    ) : (
-                        inbox.map((task) => (
-                            <Task key={task.id} task={task} columnId="inbox"></Task>
-                        ))
-                    )}
-                </div>
+                <SortableContext items={inbox.map((task) => task.id)} strategy={verticalListSortingStrategy}>
+                    <div className={styles.InBox_tasks} ref={setNodeRef}>
+                        {inbox.length === 0 ? (
+                            <div className={styles.InBox_empty}>Drop task here</div>
+                        ) : (
+                            inbox.map((task) => (
+                                <Task key={task.id} task={task} columnId="inbox"></Task>
+                            ))
+                        )}
+                    </div>
+                </SortableContext>
             </div>
         </Card>
     </div>

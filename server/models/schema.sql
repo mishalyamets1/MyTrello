@@ -14,3 +14,12 @@ CREATE TABLE tasks (
     created_at TIMESTAMP DEFAULT NOW(),
     FOREIGN KEY (column_id) REFERENCES columns(id)
 )
+CREATE TABLE users (
+    id TEXT PRIMARY KEY,
+    email TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW()
+    );
+
+ALTER TABLE tasks ADD COLUMN user_id TEXT REFERENCES users(id);
+ALTER TABLE columns ADD COLUMN user_id TEXT REFERENCES users(id) 
