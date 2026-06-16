@@ -1,0 +1,32 @@
+.popoverImg:hover {
+    border: 1px solid #007bff;
+    border-radius: 20%;
+    padding: 2px;
+    transition: ease-in-out 0.1s;
+}
+.memberItem {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+    gap: 8px;
+}
+.memberEmail {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.commandItem {
+    overflow: hidden;
+}
+.memberRole{
+    margin-left: auto;
+}
+.commandItem > :not(.memberItem) {
+    display: none;
+}
+.inviteBtn {
+    width: 100%;
+}

@@ -6,7 +6,7 @@ import { useEffect, useState, useRef } from "react";
 import Header from "@/components/header";
 
 export default function Home() {
-  const {token} = useAuthStore()
+  const {token, fetchProfile} = useAuthStore()
   const mounted = useRef(false)
   const [hydrated, setHydrated] = useState(false)
 
@@ -15,6 +15,9 @@ export default function Home() {
     mounted.current = true
     setHydrated(true)
   }, [])
+  useEffect(() => {
+    if (token) fetchProfile()
+  }, [token, fetchProfile])
 
   if (!hydrated) {
     return null

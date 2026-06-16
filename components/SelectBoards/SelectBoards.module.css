@@ -1,0 +1,36 @@
+.btns {
+    margin-top: 4px;
+    display: flex;
+    gap: 16px;
+}
+.item{
+    
+}
+.deleteBtn{
+    margin-left: auto;
+    flex-shrink: 0;
+    transition: opacity 150ms;
+    opacity: 0;
+    pointer-events: none;
+}
+.item:hover .deleteBtn,
+.item:focus-within .deleteBtn {
+    opacity: 1;
+    pointer-events: auto;
+}
+.row{
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+}
+
+.row span {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.item > :not(.row) {
+    display: none;
+  }

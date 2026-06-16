@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import { arrayMove } from "@dnd-kit/sortable";
 import { useAuthStore } from "./authStore";
+import { Board, BoardMemberWithEmail } from "@/server/models/types";
+import { toast } from "sonner";
 
 export interface Task {
     id: string;
@@ -20,6 +22,19 @@ export interface BoardStore {
     columns: Column[];
     inbox: Task[];
 
+    boards: Board[]
+    currentBoardId: string | null;
+    loadBoards: (preferredBoardId?: string) => Promise<void>;
+    createBoard: (title: string) => Promise<void>;
+    selectBoard: (boardId: string) => Promise<void>;
+    deleteBoard: (boardId: string) => Promise<boolean>;
+
+    members: BoardMemberWithEmail[];
+    loadMembers: () => Promise<void>;
+    inviteMember: (email: string, role: 'editor' | 'viewer') => Promise<boolean>;
+    removeMember: (userId: string) => Promise<void>;
+    changeMemberRole: (userId: string, role: 'editor' | 'viewer') => Promise<void>;
+
     addTaskToInbox: (title: string) => void;
     deleteTask: (taskId: string) => void;
     updateTask: (taskId: string, updates: Partial<Task>) => void;
@@ -33,19 +48,155 @@ export interface BoardStore {
 export const useBoardStore = create<BoardStore>((set, get) => ({
     columns: [],
     inbox: [],
+    boards: [],
+    members:[],
+    currentBoardId: null,
+
+    async loadMembers() {
+        const token = useAuthStore.getState().token;
+        const boardId = get().currentBoardId
+        if (!boardId) return
+
+        const res = await fetch(`http://localhost:3001/api/boards/${boardId}/members`, {
+            headers: {Authorization: `Bearer ${token}`}
+        })
+        const data = await res.json()
+        if (data.success) set({members: data.data})
+    },
+    async inviteMember(email, role) {
+        const token = useAuthStore.getState().token;
+        const boardId = get().currentBoardId
+        if (!boardId) return false
+        const res = await fetch(`http://localhost:3001/api/boards/${boardId}/members`,{
+            method: 'POST',
+            headers: {"Content-Type": "application/json", Authorization: `Bearer ${token}`},
+            body: JSON.stringify({email, role})
+        })
+        const data = await res.json()
+        if (!data.success) {
+            toast.error(String(data.error))
+            return false
+        }
+        toast.success('Участник добавлен')
+        await get().loadMembers()
+        return true
+    },
+    async removeMember(userId) {
+        const token = useAuthStore.getState().token;
+        const boardId = get().currentBoardId;
+        if (!boardId) return
+
+        const res = await fetch(`http://localhost:3001/api/boards/${boardId}/members/${userId}`, {
+            method: 'DELETE',
+            headers: {Authorization: `Bearer ${token}`},
+        })
+        const data = await res.json();
+        if (!data.success) {
+            toast.error(String(data.error));
+            return;
+        }
+
+        set((state) => ({members: state.members.filter((m) => m.userId !== userId)}))
+        
+    },
+    async changeMemberRole(userId, role) {
+        const token = useAuthStore.getState().token;
+        const boardId = get().currentBoardId;
+        if (!boardId) return;
+
+        const res = await fetch(`http://localhost:3001/api/boards/${boardId}/members/${userId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ role }),
+        });
+
+        const data = await res.json();
+        if (!data.success) {
+            toast.error(String(data.error));
+            return;
+        }
+
+        await get().loadMembers();
+    },
+    async loadBoards(preferredBoardId) {
+        const token = useAuthStore.getState().token;
+        const res = await fetch('http://localhost:3001/api/boards',{
+            headers: {Authorization: `Bearer ${token}`}
+    })
+        const data = await res.json()
+        const boards = data.data ?? [];
+        set({boards})
+
+        const fromUrl = preferredBoardId ?? null;
+        const validId = fromUrl && boards.some((b: Board) => b.id === fromUrl) ? fromUrl : null
+        
+        if (validId) {
+            set({currentBoardId: validId})
+            await get().loadData()
+        } else if (boards[0]?.id) {
+            await get().selectBoard(boards[0].id)
+        } else {
+            set({currentBoardId: null, columns: [], inbox: []})
+        }
+        
+        
+    },
+
+    async selectBoard(boardId) {
+        set({currentBoardId: boardId});
+        await get().loadData()
+    },
+
+    async createBoard(title){
+        const token = useAuthStore.getState().token;
+        const res = await fetch('http://localhost:3001/api/boards',{
+            method: 'POST',
+            headers: {"Content-Type": "application/json", Authorization: `Bearer ${token}`},
+            body: JSON.stringify({title})
+        })
+        const data = await res.json()
+        if (data?.data) {
+            set((state) => ({boards: [data.data, ...state.boards]}));
+            await get().selectBoard(data.data.id)
+        }
+    },
+    async deleteBoard(boardId){
+        const token = useAuthStore.getState().token;
+        const res = await fetch(`http://localhost:3001/api/boards/${boardId}`, {
+            method: 'DELETE',
+            headers: {"Content-type": "application/json", Authorization: `Bearer ${token}`},
+        })
+        const data = await res.json()
+
+        if (!data.success) return false
+
+        const wasCurrent = get().currentBoardId === boardId
+        const remaining = get().boards.filter((b) => b.id !== boardId)
+
+        if (wasCurrent) {
+            if(remaining[0]?.id) {
+                set({boards: remaining})
+                await get().selectBoard(remaining[0].id)
+            } else {
+                set({boards: [], currentBoardId: null, columns: [], inbox: []})
+            }
+        } else {
+            set({boards: remaining})
+        }
+
+        return wasCurrent
+    },
 
     async loadData() {
         const token = useAuthStore.getState().token
+        const boardId = get().currentBoardId;
+        if (!boardId) return;
         const [colRes, tasksRes] = await Promise.all([
-            fetch('http://localhost:3001/api/columns', {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
+            fetch(`http://localhost:3001/api/columns?boardId=${boardId}`, {
+                headers: {Authorization: `Bearer ${token}`},
             }),
-            fetch('http://localhost:3001/api/tasks/inbox', {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
+            fetch(`http://localhost:3001/api/tasks/inbox?boardId=${boardId}`, {
+                headers: {Authorization: `Bearer ${token}`},
             })
         ]);
         const columns = await colRes.json();
@@ -59,7 +210,13 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
    
     addTaskToInbox: async (title) => {
         const token = useAuthStore.getState().token
-        const res = await fetch('http://localhost:3001/api/tasks/inbox', {
+        const boardId = get().currentBoardId
+        if (!boardId) return
+        if (!title) {
+            toast.error("Введите название")
+            return
+        }
+        const res = await fetch(`http://localhost:3001/api/tasks/inbox?boardId=${boardId}`, {
             method: 'POST', 
             headers: {'Content-Type': 'application/json', Authorization: `Bearer ${token}`},
             body: JSON.stringify({title})
@@ -74,12 +231,13 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
     },
     updateTask: async (taskId, updates) => {
         const token = useAuthStore.getState().token
-        const res = await fetch(`http://localhost:3001/api/tasks/${taskId}`, {
+        const boardId = get().currentBoardId
+        if (!boardId) return
+        const res = await fetch(`http://localhost:3001/api/tasks/${taskId}?boardId=${boardId}`, {
             method: 'PUT',
             headers: {'Content-Type': 'application/json', Authorization: `Bearer ${token}`},
             body: JSON.stringify(updates)
         })
-        const data = await res.json()
 
         set((state) => ({
             inbox: state.inbox.map((task) =>
@@ -95,10 +253,12 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
     },
     deleteTask: async (taskId) => {
         const token = useAuthStore.getState().token
-        const res = await fetch(`http://localhost:3001/api/tasks/${taskId}`, {
+        const boardId = get().currentBoardId
+        if (!boardId) return
+        const res = await fetch(`http://localhost:3001/api/tasks/${taskId}?boardId=${boardId}`, {
             method: 'DELETE',
             headers: {'Content-Type': 'application/json', Authorization: `Bearer ${token}`},
-            body: JSON.stringify({taskId})
+            body: JSON.stringify({})
         })
         const data = await res.json()
         if (data.success) {
@@ -182,11 +342,12 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
         set((state) => applyMove(state))
 
         const token = useAuthStore.getState().token
+        const boardId = get().currentBoardId
         try {
             const res = await fetch(`http://localhost:3001/api/tasks/${taskId}/move`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json', Authorization: `Bearer ${token}`},
-                body: JSON.stringify({fromColumnId, toColumnId, toIndex})
+                body: JSON.stringify({fromColumnId, toColumnId, toIndex, boardId})
             })
             const data = await res.json()
             if (!data.success) {
@@ -212,8 +373,9 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
             }
         })
         const token = useAuthStore.getState().token
+        const boardId = get().currentBoardId
         try {
-            const res = await fetch(`http://localhost:3001/api/columns/${fromColumnId}/move`, {
+            const res = await fetch(`http://localhost:3001/api/columns/${fromColumnId}/move?boardId=${boardId}`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json', Authorization: `Bearer ${token}`},
                 body: JSON.stringify({toIndex})
@@ -229,7 +391,13 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
     },
     addColumn: async (title) => {
         const token = useAuthStore.getState().token
-        const res = await fetch('http://localhost:3001/api/columns', {
+        const boardId = get().currentBoardId
+        if (!boardId) return
+        if (!title) {
+            toast.error("Введите название")
+            return
+        }
+        const res = await fetch(`http://localhost:3001/api/columns?boardId=${boardId}`, {
             method: 'POST', 
             headers: {'Content-Type' : 'application/json', Authorization: `Bearer ${token}`},
             body: JSON.stringify({title})
@@ -242,10 +410,12 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
     }, 
     deleteColumn: async (columnId) => {
         const token = useAuthStore.getState().token
-        const res = await fetch(`http://localhost:3001/api/columns/${columnId}`, {
+        const boardId = get().currentBoardId
+        if (!boardId) return
+        const res = await fetch(`http://localhost:3001/api/columns/${columnId}?boardId=${boardId}`, {
             method: 'DELETE',
             headers: {'Content-Type' : 'application/json', Authorization: `Bearer ${token}`},
-            body: JSON.stringify({columnId})
+            body: JSON.stringify({})
         })
         const data = await res.json()
         if (data.success) {
