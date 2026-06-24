@@ -1,30 +1,44 @@
 'use client'
 
-import React, { useEffect, useMemo, useState, useRef } from 'react'
+import React, { useMemo, useState } from 'react'
+import Image from 'next/image'
 import styles from './page.module.css'
 import InBox from '@/components/InBox'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
 import Task from '@/components/Task'
 import MainBoard from '@/components/MainBoard'
 import Column from '@/components/Column'
-import { DndContext, DragOverlay, type DragEndEvent, type DragStartEvent, type DragCancelEvent } from '@dnd-kit/core'
+import { Button } from '@/components/ui/button'
+import { Sheet, SheetContent } from '@/components/ui/sheet'
+import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  type DragStartEvent,
+} from '@dnd-kit/core'
 import { useBoardStore } from '@/stores/boardStore'
 import type { Task as TaskType, Column as ColumnType } from '@/stores/boardStore'
+import { useBoardRealtime } from '@/hooks/useBoardRealtime'
+import { useIsMobile } from '@/hooks/useMediaQuery'
 
 const MainPage = () => {
-
-const {loadData} = useBoardStore()
-const mounted = useRef(false)
-
-    useEffect(() => {
-      if (mounted.current) return
-      mounted.current = true
-      loadData()
-    }, [loadData])
-
   const { moveTask, moveColumn, inbox, columns } = useBoardStore()
   const [activeTask, setActiveTask] = useState<TaskType | null>(null)
   const [activeColumn, setActiveColumn] = useState<ColumnType | null>(null)
+  const [inboxOpen, setInboxOpen] = useState(false)
+  const isMobile = useIsMobile()
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 8 } })
+  )
+
+  const currentBoardId = useBoardStore((s) => s.currentBoardId)
+  useBoardRealtime(currentBoardId)
 
   const taskIndex = useMemo(() => {
     const map = new Map<string, TaskType>()
@@ -50,6 +64,8 @@ const mounted = useRef(false)
   }, [columns])
 
   const handleDragStart = (event: DragStartEvent) => {
+    if (isMobile) return
+
     const activeType = event.active.data.current?.type
 
     if (activeType === 'column') {
@@ -70,6 +86,8 @@ const mounted = useRef(false)
   }
 
   const handleDragEnd = (event: DragEndEvent) => {
+    if (isMobile) return
+
     const { active, over } = event
     const activeType = active.data.current?.type
 
@@ -150,23 +168,55 @@ const mounted = useRef(false)
 
   return (
     <div className={styles.mainPage}>
-      <DndContext onDragStart={handleDragStart} onDragCancel={handleDragCancel} onDragEnd={handleDragEnd}>
-        <ResizablePanelGroup orientation="horizontal">
-          <ResizablePanel defaultSize={300} minSize={300}>
-            <InBox />
-          </ResizablePanel>
-          <ResizableHandle withHandle />
-          <ResizablePanel minSize={400}>
+      <DndContext
+        sensors={sensors}
+        onDragStart={handleDragStart}
+        onDragCancel={handleDragCancel}
+        onDragEnd={handleDragEnd}
+      >
+        {isMobile && (
+          <div className={styles.mobileToolbar}>
+            <Button variant="outline" size="sm" onClick={() => setInboxOpen(true)}>
+              <Image src="/inbox.svg" alt="" width={16} height={16} />
+              InBox
+            </Button>
+          </div>
+        )}
+
+        {isMobile ? (
+          <>
+            <div className={styles.mainPage_board}>
               <MainBoard />
-          </ResizablePanel>
-        </ResizablePanelGroup>
-        <DragOverlay dropAnimation={null}>
-          {activeTask ? (
-            <Task task={activeTask} columnId="overlay" draggable={false} />
-          ) : activeColumn ? (
-            <Column column={activeColumn} draggable={false} droppable={false} />
-          ) : null}
-        </DragOverlay>
+            </div>
+            <Sheet open={inboxOpen} onOpenChange={setInboxOpen}>
+              <SheetContent side="left" title="InBox">
+                <div className={styles.inBoxDrawer}>
+                  <InBox />
+                </div>
+              </SheetContent>
+            </Sheet>
+          </>
+        ) : (
+          <ResizablePanelGroup orientation="horizontal" className={styles.mainPage_board}>
+            <ResizablePanel defaultSize="300px" minSize="250px">
+              <InBox />
+            </ResizablePanel>
+            <ResizableHandle withHandle />
+            <ResizablePanel minSize="400px">
+              <MainBoard />
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        )}
+
+        {!isMobile && (
+          <DragOverlay dropAnimation={null}>
+            {activeTask ? (
+              <Task task={activeTask} columnId="overlay" draggable={false} />
+            ) : activeColumn ? (
+              <Column column={activeColumn} draggable={false} droppable={false} />
+            ) : null}
+          </DragOverlay>
+        )}
       </DndContext>
     </div>
   )

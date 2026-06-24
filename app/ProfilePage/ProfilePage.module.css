@@ -3,6 +3,13 @@
     margin: 32px auto;
     padding: 24px;
 }
+
+@media (max-width: 767px) {
+    .profilePage {
+        margin: 16px auto;
+        padding: 16px;
+    }
+}
 .profilePage_inner{
     display: flex;
     justify-content: space-between;

@@ -5,7 +5,10 @@ import tasksRouter from './routes/tasks'
 import authRouter from './routes/auth'
 import boardRouter from './routes/boards'
 import usersRouter from './routes/users'
+import aiRouter from './routes/ai'
 import { authMiddleware } from "./middleware/auth";
+import { createServer } from "http";
+import { attachWebSocket } from "./realtime";
 
 const app = express();
 
@@ -25,8 +28,12 @@ app.use('/api/columns', authMiddleware, columnsRouter)
 app.use('/api/tasks', authMiddleware, tasksRouter)
 app.use('/api/boards', authMiddleware, boardRouter)
 app.use('/api/users', authMiddleware, usersRouter)
+app.use('/api/ai', authMiddleware, aiRouter)
+
+const server = createServer(app)
+attachWebSocket(server)
 
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`✅ server running on http://localhost:${PORT}`)
 })

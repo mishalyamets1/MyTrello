@@ -30,7 +30,7 @@
     font-weight: 600;
     text-overflow: clip;
 }
-.column_dragHandle {
+  .column_dragHandle {
     border: 1px solid var(--border);
     border-radius: 6px;
     background: var(--card);
@@ -47,9 +47,26 @@
 .column_tasks {
     display: flex;
     flex-direction: column;
+    align-items: stretch;
     padding: 0px 8px ;
     width: 100%;    
     gap: 8px;
     flex: 1;
     min-height: 0;
+}
+
+@media (max-width: 767px) {
+    .column {
+        min-width: 260px;
+        width: 85vw;
+    }
+
+    .column_dragHandle {
+        padding: 6px 8px;
+        min-width: 44px;
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
 }

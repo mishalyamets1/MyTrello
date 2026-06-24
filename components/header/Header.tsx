@@ -28,7 +28,6 @@ const Header = () => {
             <BoardMembers/>
         </div>
         <div className={styles.header_search}>
-            {/* <Input placeholder='Search boards'></Input> */}
             <SelectBoards></SelectBoards>
         </div>
         <div className={styles.header_user}>
@@ -39,7 +38,10 @@ const Header = () => {
             </Avatar>
             </button>
             
-            <Button onClick={() => logout()} variant="default">Выйти</Button>
+            <Button onClick={() => logout()} variant="default" aria-label="Выйти">
+                <span className={styles.header_logoutLabel}>Выйти</span>
+                <span className={styles.header_logoutIcon} aria-hidden><Image src='/log-out.svg' width={16} height={16} alt=''></Image></span>
+            </Button>
         </div>
     </div>
   )

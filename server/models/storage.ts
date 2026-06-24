@@ -8,15 +8,15 @@ export const getAllColumns = async (userId: string, boardId: string) => {
     }
 
     const columnsResult = await pool.query(
-        "SELECT * FROM columns WHERE board_id = $1 AND id NOT LIKE $2 ORDER BY position ASC",
-        [boardId, "inbox%"]
+        "SELECT * FROM columns WHERE board_id = $1 AND id NOT LIKE $2 AND id NOT LIKE $3 ORDER BY position ASC",
+        [boardId, "inbox%", "archive%"]
     );
     const columns = columnsResult.rows;
 
     const result = await Promise.all(
         columns.map(async (column) => {
             const tasksResult = await pool.query(
-                "SELECT * FROM tasks WHERE column_id = $1 AND board_id = $2 ORDER BY position ASC",
+                "SELECT * FROM tasks WHERE column_id = $1 AND board_id = $2 AND done = false ORDER BY position ASC",
                 [column.id, boardId]
             );
             return {
@@ -35,6 +35,9 @@ export const getAllColumns = async (userId: string, boardId: string) => {
                     tags: row.tags,
                     createdAt: row.created_at,
                     position: row.position,
+                    assigneeId: row.assignee_id ?? null,
+                    dueDate: row.due_date ? row.due_date.toISOString() : null,
+                    priority: row.priority ?? 'medium'
                 })),
             };
         })
@@ -136,7 +139,7 @@ export const getTasks = async (userId: string, boardId: string) => {
 
     const inboxId = `inbox_${boardId}`;
     const result = await pool.query(
-        "SELECT * FROM tasks WHERE column_id = $1 AND board_id = $2 ORDER BY position ASC",
+        "SELECT * FROM tasks WHERE column_id = $1 AND board_id = $2 AND done = false ORDER BY position ASC",
         [inboxId, boardId]
     );
     return result.rows.map((row) => ({
@@ -150,6 +153,9 @@ export const getTasks = async (userId: string, boardId: string) => {
         tags: row.tags,
         createdAt: row.created_at,
         position: row.position,
+        assigneeId: row.assignee_id ?? null,
+        dueDate: row.due_date ? row.due_date.toISOString() : null,
+        priority: row.priority ?? 'medium'
     }));
 };
 
@@ -187,6 +193,9 @@ export const addTask = async (title: string, userId: string, boardId: string) =>
         tags: row.tags,
         createdAt: row.created_at,
         position: row.position,
+        assigneeId: row.assignee_id ?? null,
+        dueDate: row.due_date ? row.due_date.toISOString() : null,
+        priority: row.priority ?? 'medium'
     };
 };
 
@@ -230,6 +239,35 @@ export const updateTask = async (
         values.push(updates.tags);
         paramIndex++;
     }
+    if (updates.assigneeId !== undefined) {
+        if (updates.assigneeId !== null) {
+            const assigneeCheck = await pool.query(
+                "SELECT 1 FROM board_members WHERE board_id = $1 AND user_id = $2",
+                [boardId, updates.assigneeId]
+            )
+            if (!assigneeCheck.rows[0]) {
+                throw new Error("Assignee must be a board member")
+            }
+        }
+        setUpdates.push(`assignee_id = $${paramIndex}`)
+        values.push(updates.assigneeId)
+        paramIndex++
+    }
+
+    if (updates.dueDate !== undefined) {
+        setUpdates.push(`due_date = $${paramIndex}`)
+        values.push(updates.dueDate)
+        paramIndex++
+    }
+    if (updates.priority !== undefined) {
+        const allowed = ['low', 'medium', 'high']
+        if (!allowed.includes(updates.priority)) {
+            throw new Error('Invalid priority')
+        }
+        setUpdates.push(`priority = $${paramIndex}`)
+        values.push(updates.priority)
+        paramIndex++
+    }
 
     if (setUpdates.length === 0) return null;
 
@@ -242,16 +280,19 @@ export const updateTask = async (
     const row = result.rows[0];
     return row
         ? {
-              id: row.id,
-              title: row.title,
-              description: row.description,
-              columnId: row.column_id,
-              boardId: row.board_id,
-              userId: row.user_id,
-              done: row.done,
-              tags: row.tags,
-              createdAt: row.created_at,
-              position: row.position,
+            id: row.id,
+            title: row.title,
+            description: row.description,
+            columnId: row.column_id,
+            boardId: row.board_id,
+            userId: row.user_id,
+            done: row.done,
+            tags: row.tags,
+            createdAt: row.created_at,
+            position: row.position,
+            assigneeId: row.assignee_id ?? null,
+            dueDate: row.due_date ? row.due_date.toISOString() : null,
+            priority: row.priority ?? 'medium'
           }
         : null;
 };
@@ -384,9 +425,16 @@ export const createBoard = async (title: string, userId: string): Promise<Board>
     ]);
 
     const inboxId = `inbox_${id}`;
+    const archiveId = `archive_${id}`;
     await pool.query("INSERT INTO columns (id, title, user_id, board_id) VALUES ($1, $2, $3, $4)", [
         inboxId,
         "INBOX",
+        userId,
+        id,
+    ]);
+    await pool.query("INSERT INTO columns (id, title, user_id, board_id) VALUES ($1, $2, $3, $4)", [
+        archiveId,
+        "ARCHIVE",
         userId,
         id,
     ]);
@@ -503,5 +551,117 @@ export const getBoardMembers = async (boardId: string, requestingUserId: string)
         createdAt: row.created_at
     }))
 };
+export const getArchivedTasks = async (userId: string, boardId: string) => {
+    const hasAccess = await checkBoardAccess(boardId, userId);
+
+    if (!hasAccess) throw new Error("No access to this board");
+
+    const archiveId = `archive_${boardId}`
+    const result = await pool.query(
+        `SELECT * FROM tasks
+        WHERE board_id = $1 AND column_id = $2 AND done = true
+        ORDER BY archived_at DESC NULLS LAST, created_at DESC`,
+        [boardId, archiveId]
+    )
+    return result.rows.map((row) => ({
+        id: row.id,
+        title: row.title,
+        description: row.description,
+        columnId: row.column_id,
+        boardId: row.board_id,
+        userId: row.user_id,
+        done: row.done,
+        tags: row.tags,
+        createdAt: row.created_at,
+        position: row.position,
+        assigneeId: row.assignee_id ?? null,
+        dueDate: row.due_date ? row.due_date.toISOString() : null,
+        priority: row.priority ?? 'medium'
+    }));
+}
+const ensureArchiveColumn = async (boardId: string, userId: string) => {
+    const archiveId = `archive_${boardId}`;
+    const existing = await pool.query(
+        "SELECT id FROM columns WHERE id = $1 AND board_id = $2",
+        [archiveId, boardId]
+    );
+    if (!existing.rows[0]) {
+        await pool.query(
+            "INSERT INTO columns (id, title, user_id, board_id) VALUES ($1, $2, $3, $4)",
+            [archiveId, "ARCHIVE", userId, boardId]
+        );
+    }
+};
+
+export const completeTask = async (taskId: string, userId: string, boardId: string) => {
+    const memberRes = await pool.query(
+        "SELECT role FROM board_members WHERE board_id = $1 AND user_id = $2",
+        [boardId, userId]
+    );
+    if (!memberRes.rows[0] || memberRes.rows[0].role === "viewer") {
+        throw new Error("No permission to update task");
+    }
+
+    await ensureArchiveColumn(boardId, userId);
+
+    const archiveId = `archive_${boardId}`
+
+    await pool.query("BEGIN");
+
+    const taskRes = await pool.query(
+        "SELECT column_id, position FROM tasks WHERE id = $1 AND board_id = $2",
+        [taskId, boardId]
+    )
+    const task = taskRes.rows[0]
+    if(!task) {
+        await pool.query("ROLLBACK")
+        return null
+    }
+    const posRes = await pool.query(
+        "SELECT COALESCE(MAX(position), -1) + 1 AS pos FROM tasks WHERE column_id = $1 AND board_id = $2",
+        [archiveId, boardId]
+    )
+    const newPos = Number(posRes.rows[0]?.pos ?? 0)
+
+    await pool.query(
+        "UPDATE tasks SET position = position - 1 WHERE board_id = $1 AND column_id = $2 AND position > $3",
+        [boardId, task.column_id, task.position]
+    )
+    await pool.query(
+        `UPDATE tasks SET done = true, archived_at = NOW(), column_id = $1, position = $2
+        WHERE id = $3 AND board_id = $4`, [archiveId, newPos, taskId, boardId]
+    );
+    await pool.query("COMMIT")
+    return {id: taskId, done: true, columnId: archiveId}
+}
+export const restoreTask = async (taskId: string, userId: string, boardId: string) => {
+    const memberRes = await pool.query(
+        "SELECT role FROM board_members WHERE board_id = $1 AND user_id = $2",
+        [boardId, userId]
+    );
+    if (!memberRes.rows[0] || memberRes.rows[0].role === "viewer") {
+        throw new Error("No permission to update task");
+    }
+
+    const inboxId = `inbox_${boardId}`;
+    const archiveId = `archive_${boardId}`;
+
+    await pool.query("BEGIN")
+
+    const posRes = await pool.query(
+        "SELECT COALESCE(MAX(position), -1) + 1 AS pos FROM tasks WHERE column_id = $1 AND board_id = $2",
+        [inboxId, boardId]
+    )
+    const newPos = Number(posRes.rows[0]?.pos ?? 0);
+
+    await pool.query(
+        `UPDATE tasks
+        SET done = false, archived_at = NULL, column_id = $1, position = $2
+        WHERE id = $3 AND board_id = $4 AND column_id = $5`,
+        [inboxId, newPos, taskId, boardId, archiveId]
+    )
+
+    await pool.query("COMMIT")
+}
 
 

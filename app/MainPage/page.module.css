@@ -1,7 +1,38 @@
 .mainPage {
-    min-height: 100vh;
-    height: 100vh;
+    min-height: var(--content-height);
+    height: var(--content-height);
     border: none;
     display: flex;
-    margin-top: 8px;
+    flex-direction: column;
+    margin-top: var(--page-gap);
+    min-width: 0;
+}
+
+.mobileToolbar {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    height: var(--mobile-toolbar-height);
+    padding: 0 12px;
+    border-bottom: 1px solid var(--border);
+}
+
+.mainPage_board {
+    flex: 1;
+    min-height: 0;
+    min-width: 0;
+}
+
+.inBoxDrawer {
+    --panel-height: 100%;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+@media (max-width: 767px) {
+    .mobileToolbar {
+        display: flex;
+    }
 }

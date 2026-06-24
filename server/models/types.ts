@@ -9,6 +9,9 @@ export interface Task {
   tags: string[];
   createdAt: Date;
   position: number;
+  assigneeId: string | null;
+  dueDate: string | null;
+  priority: TaskPriority
 }
 
 export interface Column {
@@ -46,3 +49,4 @@ export interface User {
   avatar: string | null;
   createdAt: Date;
 }
+export type TaskPriority = 'low' | 'medium' | 'high'

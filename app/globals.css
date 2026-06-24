@@ -49,6 +49,10 @@
 }
 
 :root {
+  --header-height: 56px;
+  --page-gap: 8px;
+  --mobile-toolbar-height: 44px;
+  --content-height: calc(100vh - var(--header-height) - var(--page-gap));
   --background: #ffffff;
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -129,6 +133,17 @@
     height: 100%;
     overflow: hidden;
     @apply bg-background text-foreground;
+  }
+  @media (max-width: 767px) {
+    html,
+    body {
+      overflow: auto;
+    }
+    :root {
+      --content-height: calc(
+        100vh - var(--header-height) - var(--page-gap) - var(--mobile-toolbar-height)
+      );
+    }
   }
   button:not(:disabled), [role="button"]:not(:disabled) {
     cursor: pointer;

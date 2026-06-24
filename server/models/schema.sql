@@ -113,3 +113,20 @@ UPDATE tasks SET board_id = (
 
 ALTER TABLE users ADD COLUMN display_name TEXT;
 ALTER TABLE users ADD COLUMN avatar TEXT;
+
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS archived_at TIMESTAMP;
+INSERT INTO columns (id, title, user_id, board_id)
+SELECT 'archive_' || b.id, 'ARCHIVE', b.owner_id, b.id
+FROM boards b
+WHERE NOT EXISTS (
+    SELECT 1 FROM columns c WHERE c.id = 'archive_' || b.id
+);
+
+ALTER TABLE tasks ADD COLUMN assignee_id TEXT REFERENCES users(id);
+CREATE INDEX idx_tasks_assignee_id ON tasks(assignee_id);
+
+ALTER TABLE tasks ADD COLUMN due_date TIMESTAMP;
+ALTER TABLE tasks ADD COLUMN priority TEXT DEFAULT 'medium';
+-- опционально: только допустимые значения
+ALTER TABLE tasks ADD CONSTRAINT tasks_priority_check
+    CHECK (priority IN ('low', 'medium', 'high'));

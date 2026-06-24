@@ -1,8 +1,14 @@
 .task {
     margin-top: 0px;
     cursor: pointer;
-    min-width: 256px;
     width: 100%;
+    box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+    .task {
+        min-width: 256px;
+    }
 }
 .task_card {
     padding: 8px 12px;
@@ -98,4 +104,75 @@
     display: flex;
     justify-content: flex-end;
     gap: 8px;
+}
+.assigneeTrigger {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.assigneeSection {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.pickMemberBtn {
+    width: 100%;
+    height: auto;
+    min-height: 40px;
+    justify-content: flex-start;
+    padding: 8px 12px;
+    font-weight: normal;
+    background: var(--background);
+  }
+.taskAvatar {
+    display: flex;
+    margin-left: auto;
+}
+.dueDate {
+    margin-left: auto;
+    font-weight: 200;
+    font-size:smaller;
+}
+
+.task_menuBtn {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+}
+
+.moveMenu {
+    width: 220px;
+    padding: 8px;
+}
+
+.moveMenu_title {
+    margin: 0 0 4px;
+    padding: 0 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted-foreground);
+}
+
+.moveMenu_list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.moveMenu_item {
+    width: 100%;
+    justify-content: flex-start;
+    font-weight: normal;
+}
+
+@media (max-width: 767px) {
+    .task_dragHandle {
+        padding: 6px 8px;
+        min-width: 44px;
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
 }

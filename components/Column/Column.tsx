@@ -8,6 +8,7 @@ import type { Column as ColumnType } from '@/stores/boardStore'
 import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { useIsMobile } from '@/hooks/useMediaQuery'
 
 
 export type ColumnProps = {
@@ -19,6 +20,8 @@ export type ColumnProps = {
 const Column = ({column, draggable = true, droppable = true}: ColumnProps) => {
 
     const {deleteColumn} = useBoardStore()
+    const isMobile = useIsMobile()
+    const canDrag = draggable && !isMobile
     const {setNodeRef: setDropNodeRef} = useDroppable({
         id: column.id,
         data: {columnId: column.id},
@@ -35,7 +38,7 @@ const Column = ({column, draggable = true, droppable = true}: ColumnProps) => {
     } = useSortable({
         id: `column-${column.id}`,
         data: { type: 'column', columnId: column.id },
-        disabled: !draggable
+        disabled: !canDrag
     })
 
     const style = {
@@ -49,6 +52,7 @@ const Column = ({column, draggable = true, droppable = true}: ColumnProps) => {
       <Card className={`${styles.column_card} border border-border ring-0 items-start`}>
             <div className={styles.column_header}>
                 <div className={styles.column_title}>{column.title}</div>
+                {canDrag ? (
                 <button
                     type="button"
                     className={styles.column_dragHandle}
@@ -60,6 +64,7 @@ const Column = ({column, draggable = true, droppable = true}: ColumnProps) => {
                 >
                     ::
                 </button>
+                ) : null}
                 <Button variant="destructive" size="sm" onClick={() => deleteColumn(column.id)}>Delete</Button>
                 
             </div>

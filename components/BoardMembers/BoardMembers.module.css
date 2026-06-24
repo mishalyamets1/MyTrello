@@ -3,6 +3,7 @@
     border-radius: 20%;
     padding: 2px;
     transition: ease-in-out 0.1s;
+    cursor: pointer;
 }
 .memberItem {
     display: flex;

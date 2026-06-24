@@ -1,6 +1,7 @@
 import {create} from 'zustand'
 import {persist, createJSONStorage} from 'zustand/middleware'
 import {toast} from "sonner"
+import { useBoardStore } from './boardStore'
 type AuthState = {
     token: string | null,
     userId: string | null,
@@ -22,6 +23,16 @@ type UserProfile = {
 }
 
 const API = 'http://localhost:3001/api'
+
+const resetBoardStore = () => {
+    useBoardStore.setState({
+        boards: [],
+        currentBoardId: null,
+        columns: [],
+        inbox: [],
+        members: []
+    })
+}
 
 export const useAuthStore = create<AuthState>()(
     persist(
@@ -111,6 +122,7 @@ export const useAuthStore = create<AuthState>()(
                     toast.error(data.error || 'Ошибка входа')
                     return
                 }
+                resetBoardStore()
                 set({token: data.data.token, userId: data.data.userId})
                 await get().fetchProfile()
                 toast.success('Вход успешный')
@@ -134,6 +146,7 @@ export const useAuthStore = create<AuthState>()(
                     toast.error(data.error || 'Ошибка регистрации')
                     return
                 }
+                resetBoardStore()
                 set({token: data.data.token, userId: data.data.userId, user: data.data.user})
                 toast.success('Вход успешен!')
                 }
@@ -143,6 +156,7 @@ export const useAuthStore = create<AuthState>()(
             },
             logout: () => {
                 set({token: null, userId: null, user: null})
+                resetBoardStore()
             }
         }),
         {
