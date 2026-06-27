@@ -22,6 +22,7 @@
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "cmdk": "^1.1.1",
+        "cookie-parser": "^1.4.7",
         "cors": "^2.8.6",
         "date-fns": "^4.4.0",
         "express": "4",
@@ -44,9 +45,11 @@
       },
       "devDependencies": {
         "@tailwindcss/postcss": "^4",
+        "@types/cookie-parser": "^1.4.10",
         "@types/node": "^25.7.0",
         "@types/react": "^19",
         "@types/react-dom": "^19",
+        "@types/ws": "^8.18.1",
         "eslint": "^9",
         "eslint-config-next": "16.2.4",
         "tailwindcss": "^4",
@@ -477,6 +480,8 @@
 
     "@types/connect": ["@types/connect@3.4.38", "", { "dependencies": { "@types/node": "*" } }, "sha512-K6uROf1LD88uDQqJCktA4yzL1YYAK6NgfsI0v/mTgyPKWsX1CnJ0XPSDhViejru1GcRkLWb8RlzFYJRqGUbaug=="],
 
+    "@types/cookie-parser": ["@types/cookie-parser@1.4.10", "", { "peerDependencies": { "@types/express": "*" } }, "sha512-B4xqkqfZ8Wek+rCOeRxsjMS9OgvzebEzzLYw7NHYuvzb7IdxOkI0ZHGgeEBX4PUM7QGVvNSK60T3OvWj3YfBRg=="],
+
     "@types/cors": ["@types/cors@2.8.19", "", { "dependencies": { "@types/node": "*" } }, "sha512-mFNylyeyqN93lfe/9CSxOGREz8cpzAhH+E93xJ4xWQf62V8sQ/24reV2nyzUWM6H6Xji+GGHpkbLe7pVoUEskg=="],
 
     "@types/estree": ["@types/estree@1.0.8", "", {}, "sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w=="],
@@ -518,6 +523,8 @@
     "@types/uuid": ["@types/uuid@11.0.0", "", { "dependencies": { "uuid": "*" } }, "sha512-HVyk8nj2m+jcFRNazzqyVKiZezyhDKrGUA3jlEcg/nZ6Ms+qHwocba1Y/AaVaznJTAM9xpdFSh+ptbNrhOGvZA=="],
 
     "@types/validate-npm-package-name": ["@types/validate-npm-package-name@4.0.2", "", {}, "sha512-lrpDziQipxCEeK5kWxvljWYhUvOiB2A9izZd9B2AFarYAkqZshb4lPbRs7zKEic6eGtH8V/2qJW+dPp9OtF6bw=="],
+
+    "@types/ws": ["@types/ws@8.18.1", "", { "dependencies": { "@types/node": "*" } }, "sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg=="],
 
     "@typescript-eslint/eslint-plugin": ["@typescript-eslint/eslint-plugin@8.59.1", "", { "dependencies": { "@eslint-community/regexpp": "^4.12.2", "@typescript-eslint/scope-manager": "8.59.1", "@typescript-eslint/type-utils": "8.59.1", "@typescript-eslint/utils": "8.59.1", "@typescript-eslint/visitor-keys": "8.59.1", "ignore": "^7.0.5", "natural-compare": "^1.4.0", "ts-api-utils": "^2.5.0" }, "peerDependencies": { "@typescript-eslint/parser": "^8.59.1", "eslint": "^8.57.0 || ^9.0.0 || ^10.0.0", "typescript": ">=4.8.4 <6.1.0" } }, "sha512-BOziFIfE+6osHO9FoJG4zjoHUcvI7fTNBSpdAwrNH0/TLvzjsk2oo8XSSOT2HhqUyhZPfHv4UOffoJ9oEEQ7Ag=="],
 
@@ -695,7 +702,9 @@
 
     "cookie": ["cookie@0.7.2", "", {}, "sha512-yki5XnKuf750l50uGTllt6kKILY4nQ1eNIQatoXEByZ5dWgnKqbnqmTrBE5B4N7lrMJKQ2ytWMiTO2o0v6Ew/w=="],
 
-    "cookie-signature": ["cookie-signature@1.0.7", "", {}, "sha512-NXdYc3dLr47pBkpUCHtKSwIOQXLVn8dZEuywboCOJY/osA0wFSLlSawr3KN8qXJEyX66FcONTH8EIlVuK0yyFA=="],
+    "cookie-parser": ["cookie-parser@1.4.7", "", { "dependencies": { "cookie": "0.7.2", "cookie-signature": "1.0.6" } }, "sha512-nGUvgXnotP3BsjiLX2ypbQnWoGUPIIfHQNZkkC668ntrzGWEZVW70HDEB1qnNGMicPje6EttlIgzo51YSwNQGw=="],
+
+    "cookie-signature": ["cookie-signature@1.0.6", "", {}, "sha512-QADzlaHc8icV8I7vbaJXJwod9HWYp8uCqf1xa4OfNu1T7JVxQIrUgOWtHdNDtPiywmFbiS12VjotIXLrKM3orQ=="],
 
     "cors": ["cors@2.8.6", "", { "dependencies": { "object-assign": "^4", "vary": "^1" } }, "sha512-tJtZBBHA6vjIAaF6EnIaq6laBBP9aq/Y3ouVJjEfoHbRBcHBAHYcMh/w8LDrk2PvIMMq8gmopa5D4V8RmbrxGw=="],
 
@@ -1664,6 +1673,8 @@
     "eslint-plugin-react/semver": ["semver@6.3.1", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA=="],
 
     "eslint-plugin-react-hooks/zod": ["zod@4.4.1", "", {}, "sha512-a6ENMBBGZBsnlSebQ/eKCguSBeGKSf4O7BPnqVPmYGtpBYI7VSqoVqw+QcB7kPRjbqPwhYTpFbVj/RqNz/CT0Q=="],
+
+    "express/cookie-signature": ["cookie-signature@1.0.7", "", {}, "sha512-NXdYc3dLr47pBkpUCHtKSwIOQXLVn8dZEuywboCOJY/osA0wFSLlSawr3KN8qXJEyX66FcONTH8EIlVuK0yyFA=="],
 
     "express/debug": ["debug@2.6.9", "", { "dependencies": { "ms": "2.0.0" } }, "sha512-bC7ElrdJaJnPbAP+1EotYvqZsb3ecl5wi6Bfi6BJTUcNowp6cvspg0jXznRTKDjm/E7AdgFBVeAPVMNcKGsHMA=="],
 

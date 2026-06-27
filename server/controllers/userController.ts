@@ -57,8 +57,8 @@ export const changePassword = async (req: AuthRequest, res: Response) => {
 
         const hashed = await bcrypt.hash(newPassword, 10)
         await storage.updateUserPassword(req.userId!, hashed)
-
-        res.json({success: true})
+        await storage.revokedAllUserRefreshTokens(req.userId!)
+        res.json({success: true, data: {forceLogout: true}})
 
     } catch (e) {
         res.status(500).json({success: false, error: e})

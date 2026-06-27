@@ -6,7 +6,7 @@ import { useEffect, useRef } from "react"
 const WS_URL = 'ws://localhost:3001'
 
 export function useBoardRealtime(boardId: string | null) {
-    const token = useAuthStore((s) => s.token)
+    const token = useAuthStore((s) => s.accessToken)
     const applyRemoteEvent = useBoardStore((s) => s.applyRemoteEvent)
     const wsRef = useRef<WebSocket | null>(null)
 

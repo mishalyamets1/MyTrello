@@ -9,6 +9,7 @@ import aiRouter from './routes/ai'
 import { authMiddleware } from "./middleware/auth";
 import { createServer } from "http";
 import { attachWebSocket } from "./realtime";
+import cookieParser from 'cookie-parser'
 
 const app = express();
 
@@ -17,8 +18,11 @@ const PORT = 3001;
 app.use(cors({
     origin: 'http://localhost:3000',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
 }))
+
+app.use(cookieParser())
 
 app.use(express.json({limit: '3mb'}))
 

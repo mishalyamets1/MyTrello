@@ -130,3 +130,14 @@ ALTER TABLE tasks ADD COLUMN priority TEXT DEFAULT 'medium';
 -- опционально: только допустимые значения
 ALTER TABLE tasks ADD CONSTRAINT tasks_priority_check
     CHECK (priority IN ('low', 'medium', 'high'));
+
+CREATE TABLE refresh_tokens (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT null REFERENCES users(id) ON DELETE CASCADE,
+    token_hash TEXT NOT NULL UNIQUE,
+    family_id TEXT NOT NULL,
+    expires_at TIMESTAMP NOT NULL ,
+    created_at TIMESTAMP DEFAULT NOW(),
+    revoked_at TIMESTAMP
+                            
+)

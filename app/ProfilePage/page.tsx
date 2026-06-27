@@ -11,7 +11,7 @@ import styles from './ProfilePage.module.css'
 const ProfilePage = () => {
     const router = useRouter()
 
-    const {token, user, fetchProfile, updateProfile, changePassword} = useAuthStore()
+    const {accessToken, user, fetchProfile, updateProfile, changePassword} = useAuthStore()
     
     const [displayName, setDisplayName] = useState('')
     const [avatar, setAvatar] = useState<string | null>('')
@@ -20,9 +20,9 @@ const ProfilePage = () => {
     const [confirmPassword, setConfirmPassword] = useState('')
 
     useEffect(() => {
-        if (!token) router.push('/')
+        if (!accessToken) router.push('/')
         else fetchProfile()
-    }, [token, router, fetchProfile])
+    }, [accessToken, router, fetchProfile])
 
     useEffect(() => {
         if(user) {

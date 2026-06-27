@@ -50,3 +50,12 @@ export interface User {
   createdAt: Date;
 }
 export type TaskPriority = 'low' | 'medium' | 'high'
+
+export type RefreshRow = {
+  id: string
+  user_id: string
+  token_hash: string
+  family_id: string
+  expires_at: Date
+  revoked_at: Date | null
+}

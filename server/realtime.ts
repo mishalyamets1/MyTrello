@@ -3,6 +3,7 @@ import type {Server} from 'http'
 import jwt from 'jsonwebtoken'
 import { checkBoardAccess } from './models/storage'
 import { Task } from './models/types'
+import { verifyAccessToken } from './tokens'
 
 const SECRET = process.env.JWT_SECRET || 'your-key'
 
@@ -75,7 +76,7 @@ export function attachWebSocket(server: Server) {
             const msg = JSON.parse(String(raw))
 
             if (msg.type === 'auth') {
-                const decoded = jwt.verify(msg.token, SECRET) as {userId: string}
+                const decoded = verifyAccessToken(msg.token)
                 client.userId = decoded.userId
                 return
             }

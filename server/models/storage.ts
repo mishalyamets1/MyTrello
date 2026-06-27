@@ -1,5 +1,6 @@
 import pool from "../db";
-import { Board, Column, Task, BoardMemberWithEmail, User } from "../models/types";
+import { Board, Column, Task, BoardMemberWithEmail, User, RefreshRow } from "../models/types";
+import { hashToken } from "../tokens";
 
 export const getAllColumns = async (userId: string, boardId: string) => {
     const hasAccess = await checkBoardAccess(boardId, userId);
@@ -662,6 +663,52 @@ export const restoreTask = async (taskId: string, userId: string, boardId: strin
     )
 
     await pool.query("COMMIT")
+}
+export const saveRefreshToken = async (params: {
+    id: string
+    userId: string
+    rawToken: string
+    familyId: string
+    expiresAt: Date
+}) => {
+    await pool.query(
+        `INSERT INTO refresh_tokens (id, user_id, token_hash, family_id, expires_at)
+        VALUES ($1, $2, $3, $4, $5)`, [params.id, params.userId, hashToken(params.rawToken), params.familyId, params.expiresAt ]
+    )
+}
+
+export const findActiveRefresh = async (rawToken: string) : Promise<RefreshRow | null> => {
+    const result = await pool.query(
+        `SELECT * FROM refresh_tokens
+        WHRERE token_hash = $1 AND revoked_at IS NULL AND expires_at > NOW()`, [hashToken(rawToken)]
+    )
+    return result.rows[0] ?? null
+}
+
+export const revokeRefreshToken = async (rawToken: string) => {
+    await pool.query(
+        `UPDATE resfresh_tokens SET revoked_at = NOW() WHERE token_hash = $1 AND revoked_at IS NULL`, [hashToken(rawToken)]
+    )
+}
+
+export const findRevokedRefresh = async (rawToken: string) => {
+    const result = await pool.query(
+        `SELECT * FROM refresh_tokens
+        WHERE token_hash = $1 AND revoked_at IS NOT NULL`, [hashToken(rawToken)]
+    )
+    return result.rows[0] ?? null
+}
+export const revokeRefreshFamily = async (familyId: string) => {
+    await pool.query(
+        `UPDATE refresh_tokens SET revoked_at = NOW()
+        WHERE family_id = $1 AND revoked_at IS NULL`, [familyId]
+    )
+}
+export const revokedAllUserRefreshTokens = async (userId: string) => {
+    await pool.query(
+        `UPDATE refresh_tokens SET revoked_at = NOW()
+        WHERE user_id = $1 AND revoked_at IS NULL`, [userId]
+    )
 }
 
 

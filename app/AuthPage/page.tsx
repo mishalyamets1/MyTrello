@@ -8,15 +8,15 @@ import styles from './page.module.css'
 import { useRouter } from 'next/navigation'
 
 const AuthPage = () => {
-    const {login, register, token} = useAuthStore()
+    const {login, register, accessToken} = useAuthStore()
 
     const router = useRouter()
     
     useEffect(() => {
-        if (token) { 
+        if (accessToken) { 
             router.push('/')
         }
-    }, [router, token])
+    }, [router, accessToken])
     
 
     const [email, setEmail] = useState('')
