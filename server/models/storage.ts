@@ -680,14 +680,14 @@ export const saveRefreshToken = async (params: {
 export const findActiveRefresh = async (rawToken: string) : Promise<RefreshRow | null> => {
     const result = await pool.query(
         `SELECT * FROM refresh_tokens
-        WHRERE token_hash = $1 AND revoked_at IS NULL AND expires_at > NOW()`, [hashToken(rawToken)]
+        WHERE token_hash = $1 AND revoked_at IS NULL AND expires_at > NOW()`, [hashToken(rawToken)]
     )
     return result.rows[0] ?? null
 }
 
 export const revokeRefreshToken = async (rawToken: string) => {
     await pool.query(
-        `UPDATE resfresh_tokens SET revoked_at = NOW() WHERE token_hash = $1 AND revoked_at IS NULL`, [hashToken(rawToken)]
+        `UPDATE refresh_tokens SET revoked_at = NOW() WHERE token_hash = $1 AND revoked_at IS NULL`, [hashToken(rawToken)]
     )
 }
 
