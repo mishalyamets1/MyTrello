@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: trello_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d trello_test"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: trello_test
+      JWT_ACCESS_SECRET: test-access-secret
+      JWT_REFRESH_SECRET: test-refresh-secret
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # --- Node / Bun ---
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Install JS dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Lint
+        run: bun run lint
+
+      - name: Build Next.js
+        run: bun run build
+
+      # --- PostgreSQL schema ---
+      - name: Init database
+        run: |
+          PGPASSWORD=postgres psql -h localhost -U postgres -d trello_test -f server/models/schema.sql
+
+      # --- Start API ---
+      - name: Start server
+        run: |
+          bun run server/index.ts &
+          echo "Waiting for server..."
+          for i in {1..30}; do
+            if curl -sf http://localhost:3001/api/auth/refresh -X POST >/dev/null 2>&1; then
+              echo "Server is up"
+              break
+            fi
+            sleep 1
+          done
+
+      # --- Python tests ---
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies
+        run: pip install -r tests/requirments.txt
+
+      - name: Run pytest
+        working-directory: tests
+        run: pytest -v
