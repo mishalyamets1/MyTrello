@@ -51,8 +51,8 @@ const AuthPage = () => {
             
           </>
         )}
-        <Input value={email} onChange={e => setEmail(e.target.value)} placeholder='email'></Input>
-        <Input value={password} onChange={e => setPassword(e.target.value)} placeholder='password'></Input>
+        <Input value={email} onChange={e => setEmail(e.target.value)} placeholder='email' aria-label='email'></Input>
+        <Input value={password} onChange={e => setPassword(e.target.value)} placeholder='password' aria-label='password'></Input>
         <Button className={styles.authButton} onClick={handleSubmit}>{mode === 'login' ? 'Login' : 'Register'}</Button>
         <Button  variant='link' onClick={() => setMode(mode === 'login' ? 'register' : 'login')}>
             {mode === 'login' ? 'No account? Register' : 'Have an account? Login'}

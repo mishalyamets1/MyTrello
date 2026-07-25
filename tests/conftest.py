@@ -1,6 +1,6 @@
 import pytest
 import uuid
-
+from ui.auth_helper import register_and_open_board
 from utils.api_client import ApiClient
 
 @pytest.fixture
@@ -31,3 +31,9 @@ def board(api, registered_user):
     res = api.get_boards()
     boards = res.json()["data"]
     return boards[0]["id"]
+
+
+@pytest.fixture
+def logged_in_page(page):
+    user = register_and_open_board(page)
+    return user
